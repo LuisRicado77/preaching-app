@@ -158,7 +158,7 @@
   .point-remove { border: none; background: none; color: var(--muted-paper); font-size: 12px; cursor: pointer; flex-shrink: 0; }
   .point-remove:hover { color: var(--wine); }
   .point-body {
-    width: 100%; border: none; background: transparent; outline: none; resize: vertical;
+    width: 100%; border: none; background: transparent; outline: none; resize: none; overflow: hidden;
     font-family: var(--serif); font-size: 15px; color: var(--ink-text); line-height: 1.55; min-height: 60px; padding: 0;
   }
   .point-body::placeholder { color: #C9C0A6; font-style: italic; }
@@ -306,7 +306,7 @@
 
       <div id="signupNameField" class="auth-field" style="display:none;">
         <label for="authName">Tu nombre</label>
-        <input type="text" id="authName" placeholder="Ej: Pastor Alvaro Torres">
+        <input type="text" id="authName" placeholder="Ej: Pastor Luis Ricardo">
       </div>
       <div class="auth-field">
         <label for="authEmail">Correo</label>
@@ -862,7 +862,11 @@
       body.className = 'point-body';
       body.placeholder = 'Desarrolla esta idea…';
       body.value = point.body;
-      body.addEventListener('input', function(){ point.body = body.value; });
+      autoGrow(body);
+      body.addEventListener('input', function(){
+        point.body = body.value;
+        autoGrow(body);
+      });
 
       var pointVerses = document.createElement('div');
       pointVerses.className = 'point-verse-list';
@@ -942,6 +946,11 @@
         renderSection(key);
       }
     );
+  }
+
+  function autoGrow(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
   }
 
   function renderAllSections() {
@@ -1184,3 +1193,4 @@
 
 </body>
 </html>
+s
