@@ -670,6 +670,7 @@
   var currentId = null;
   var lastResult = null;
   var uidCounter = 0;
+  var autoSaveTimer = null;
   function uid() { uidCounter += 1; return 'p' + Date.now() + uidCounter; }
 
   function freshSections() {
@@ -713,7 +714,10 @@
   var sermonList = document.getElementById('sermonList');
   var saveStatus = document.getElementById('saveStatus');
 
-  titleInput.addEventListener('input', function(){ state.title = titleInput.value; });
+  titleInput.addEventListener('input', function(){
+    state.title = titleInput.value;
+    scheduleAutoSave();
+  });
 
   /* ================= Rendering ================= */
   function renderVerseBlock() {
@@ -846,7 +850,10 @@
       titleInputEl.className = 'point-title';
       titleInputEl.placeholder = 'Subtema o punto principal…';
       titleInputEl.value = point.title;
-      titleInputEl.addEventListener('input', function(){ point.title = titleInputEl.value; });
+      titleInputEl.addEventListener('input', function(){
+        point.title = titleInputEl.value;
+        scheduleAutoSave();
+      });
       var removeBtn = document.createElement('button');
       removeBtn.className = 'point-remove';
       removeBtn.textContent = 'Eliminar';
@@ -866,6 +873,7 @@
       body.addEventListener('input', function(){
         point.body = body.value;
         autoGrow(body);
+        scheduleAutoSave();
       });
 
       var pointVerses = document.createElement('div');
@@ -1042,9 +1050,21 @@
 
   /* ================= Persistence (Supabase) ================= */
 
-  function saveSermon() {
+  function scheduleAutoSave() {
+    if (!currentUser) return;
+    clearTimeout(autoSaveTimer);
+    saveStatus.textContent = 'Cambios pendientes...';
+    autoSaveTimer = setTimeout(function(){
+      saveSermon(true);
+    }, 800);
+  }
+
+  function saveSermon(isAutomatic) {
+    clearTimeout(autoSaveTimer);
     if (!currentUser) return;
     if (!state.title.trim()) { flashStatus('Ponle un título antes de guardar.'); return; }
+
+    if (isAutomatic) saveStatus.textContent = 'Guardando...';
 
     var row = {
       user_id: currentUser.id,
@@ -1063,7 +1083,7 @@
     query.then(function(res){
       if (res.error) { flashStatus('No se pudo guardar: ' + res.error.message); return; }
       currentId = res.data.id;
-      flashStatus('Sermón guardado.');
+      flashStatus(isAutomatic ? 'Guardado automáticamente.' : 'Sermón guardado.');
       refreshSermonList();
     });
   }
@@ -1126,6 +1146,7 @@
   }
 
   function newSermon(silent) {
+    clearTimeout(autoSaveTimer);
     currentId = null;
     state = { title: '', verse: null, sections: freshSections() };
     titleInput.value = '';
@@ -1175,7 +1196,7 @@
     URL.revokeObjectURL(url);
   }
 
-  saveBtn.addEventListener('click', saveSermon);
+  saveBtn.addEventListener('click', function(){ saveSermon(false); });
   newBtn.addEventListener('click', newSermon);
   downloadBtn.addEventListener('click', downloadSermon);
 
@@ -1193,4 +1214,3 @@
 
 </body>
 </html>
-s
