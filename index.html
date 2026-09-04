@@ -214,6 +214,15 @@
   .search-panel h2 { font-family: var(--serif); font-size: 16px; margin: 0 0 4px; color: var(--off-white); }
   .search-panel .hint { font-size: 12px; color: var(--muted-dark); margin: 0 0 16px; line-height: 1.5; }
 
+  .bible-navigator { border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 0 4px; margin-bottom: 14px; }
+  .bible-navigator-title { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.7px; margin: 0 0 10px; font-weight: 700; }
+  .bible-fields { display: grid; grid-template-columns: 1fr 92px; gap: 8px; }
+  .bible-fields .field-row { margin-bottom: 10px; }
+  .bible-fields .field-row:last-child { grid-column: 1 / -1; }
+  .bible-fields select, .bible-fields input { width: 100%; }
+  .bible-fields input[type="number"] { appearance: textfield; }
+  .bible-fields input[type="number"]::-webkit-inner-spin-button { opacity: 0.6; }
+
   .search-row { display: flex; gap: 8px; margin-bottom: 10px; }
   input[type="text"], select {
     background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.14); color: var(--off-white);
@@ -384,7 +393,33 @@
 
     <div class="search-panel">
       <h2>Buscar versículo</h2>
-      <p class="hint">Escribe una referencia en español, por ejemplo: Juan 3:16, Salmos 23:1, o 1 Corintios 13:4-7.</p>
+      <p class="hint">Elige un libro para encontrar un capítulo completo o un versículo. También puedes escribir la referencia directamente.</p>
+
+      <div class="bible-navigator">
+        <p class="bible-navigator-title">Explorar la Biblia</p>
+        <div class="bible-fields">
+          <div class="field-row">
+            <label for="bookSelect">Libro</label>
+            <select id="bookSelect">
+              <option value="">Selecciona un libro…</option>
+              <optgroup label="Antiguo Testamento">
+                <option value="1">Génesis</option><option value="2">Éxodo</option><option value="3">Levítico</option><option value="4">Números</option><option value="5">Deuteronomio</option><option value="6">Josué</option><option value="7">Jueces</option><option value="8">Rut</option><option value="9">1 Samuel</option><option value="10">2 Samuel</option><option value="11">1 Reyes</option><option value="12">2 Reyes</option><option value="13">1 Crónicas</option><option value="14">2 Crónicas</option><option value="15">Esdras</option><option value="16">Nehemías</option><option value="17">Ester</option><option value="18">Job</option><option value="19">Salmos</option><option value="20">Proverbios</option><option value="21">Eclesiastés</option><option value="22">Cantares</option><option value="23">Isaías</option><option value="24">Jeremías</option><option value="25">Lamentaciones</option><option value="26">Ezequiel</option><option value="27">Daniel</option><option value="28">Oseas</option><option value="29">Joel</option><option value="30">Amós</option><option value="31">Abdías</option><option value="32">Jonás</option><option value="33">Miqueas</option><option value="34">Nahúm</option><option value="35">Habacuc</option><option value="36">Sofonías</option><option value="37">Hageo</option><option value="38">Zacarías</option><option value="39">Malaquías</option>
+              </optgroup>
+              <optgroup label="Nuevo Testamento">
+                <option value="40">Mateo</option><option value="41">Marcos</option><option value="42">Lucas</option><option value="43">Juan</option><option value="44">Hechos</option><option value="45">Romanos</option><option value="46">1 Corintios</option><option value="47">2 Corintios</option><option value="48">Gálatas</option><option value="49">Efesios</option><option value="50">Filipenses</option><option value="51">Colosenses</option><option value="52">1 Tesalonicenses</option><option value="53">2 Tesalonicenses</option><option value="54">1 Timoteo</option><option value="55">2 Timoteo</option><option value="56">Tito</option><option value="57">Filemón</option><option value="58">Hebreos</option><option value="59">Santiago</option><option value="60">1 Pedro</option><option value="61">2 Pedro</option><option value="62">1 Juan</option><option value="63">2 Juan</option><option value="64">3 Juan</option><option value="65">Judas</option><option value="66">Apocalipsis</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="chapterSelect">Capítulo</label>
+            <select id="chapterSelect" disabled><option value="">—</option></select>
+          </div>
+          <div class="field-row">
+            <label for="verseSelect">Versículo o rango <span style="color:var(--muted-dark);">(opcional)</span></label>
+            <input type="text" id="verseSelect" placeholder="Ej: 16 o 4-7" inputmode="numeric">
+          </div>
+        </div>
+      </div>
 
       <div class="search-row"><input type="text" id="verseQuery" placeholder="Ej: Romanos 8:28"></div>
 
@@ -704,6 +739,9 @@
   var titleInput = document.getElementById('titleInput');
   var verseBlock = document.getElementById('verseBlock');
   var verseQuery = document.getElementById('verseQuery');
+  var bookSelect = document.getElementById('bookSelect');
+  var chapterSelect = document.getElementById('chapterSelect');
+  var verseSelect = document.getElementById('verseSelect');
   var versionSelect = document.getElementById('versionSelect');
   var insertTarget = document.getElementById('insertTarget');
   var searchBtn = document.getElementById('searchBtn');
@@ -713,6 +751,50 @@
   var downloadBtn = document.getElementById('downloadBtn');
   var sermonList = document.getElementById('sermonList');
   var saveStatus = document.getElementById('saveStatus');
+
+  var BOOK_CHAPTERS = {
+    1:50,2:40,3:27,4:36,5:34,6:24,7:21,8:4,9:31,10:24,11:22,12:25,13:29,14:36,15:10,16:13,17:10,18:42,
+    19:150,20:31,21:12,22:8,23:66,24:52,25:5,26:48,27:12,28:14,29:3,30:9,31:1,32:4,33:7,34:3,35:3,36:3,
+    37:2,38:14,39:4,40:28,41:16,42:24,43:21,44:28,45:16,46:16,47:13,48:6,49:6,50:4,51:4,52:5,53:3,
+    54:6,55:4,56:3,57:1,58:13,59:5,60:5,61:3,62:5,63:1,64:1,65:1,66:22
+  };
+
+  function populateChapters() {
+    var bookId = bookSelect.value;
+    chapterSelect.innerHTML = '<option value="">Selecciona…</option>';
+    chapterSelect.disabled = !bookId;
+    if (!bookId) return;
+    for (var chapter = 1; chapter <= BOOK_CHAPTERS[bookId]; chapter += 1) {
+      var option = document.createElement('option');
+      option.value = String(chapter);
+      option.textContent = 'Capítulo ' + chapter;
+      chapterSelect.appendChild(option);
+    }
+  }
+
+  function syncQueryFromNavigator() {
+    if (!bookSelect.value || !chapterSelect.value) return;
+    var reference = BOOK_NAMES_ES[bookSelect.value] + ' ' + chapterSelect.value;
+    var verse = verseSelect.value.trim();
+    verseQuery.value = reference + (verse ? ':' + verse : '');
+  }
+
+  function clearNavigator() {
+    bookSelect.value = '';
+    populateChapters();
+    verseSelect.value = '';
+  }
+
+  bookSelect.addEventListener('change', function(){
+    populateChapters();
+    verseSelect.value = '';
+    syncQueryFromNavigator();
+  });
+  chapterSelect.addEventListener('change', syncQueryFromNavigator);
+  verseSelect.addEventListener('input', syncQueryFromNavigator);
+  verseQuery.addEventListener('input', function(){
+    if (bookSelect.value) clearNavigator();
+  });
 
   titleInput.addEventListener('input', function(){
     state.title = titleInput.value;
@@ -987,6 +1069,7 @@
   }
 
   function searchVerse() {
+    syncQueryFromNavigator();
     var raw = verseQuery.value.trim();
     if (!raw) return;
     var parsed = parseReference(raw);
@@ -1153,6 +1236,9 @@
     renderVerseBlock();
     renderAllSections();
     verseQuery.value = '';
+    bookSelect.value = '';
+    populateChapters();
+    verseSelect.value = '';
     resultArea.innerHTML = '';
     if (!silent) flashStatus('Nuevo sermón.');
   }
